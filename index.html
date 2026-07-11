@@ -87,8 +87,8 @@ function c3() {
     let res = parseFloat(document.getElementById('p3_res').value);
     let prec = parseFloat(document.getElementById('p3_prec').value);
     if (!prec) prec = fov / res;
-    if (!fov) fov = prec * res;
-    if (!res) res = fov / prec;
+    else if (!fov) fov = prec * res;
+    else if (!res) res = fov / prec;
     document.getElementById('r3').innerText = `影像精度: ${f(prec)}mm/pixel\nFOV: ${f(fov)}mm\n解析度: ${f(res)}`;
 }
 
