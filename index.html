@@ -9,7 +9,7 @@
         .container { width: 100%; max-width: 400px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h2 { font-size: 1rem; color: #333; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 20px; }
         input { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        button { background: #2c3e50; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; margin-top: 10px; font-weight: bold; }
+        button { background: #2c3e50; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; margin-top: 10px; font-weight: bold; cursor: pointer; }
         .res { font-size: 0.85rem; color: #c0392b; padding: 10px; background: #fff5f5; border-radius: 8px; margin-top: 10px; white-space: pre-line; }
     </style>
 </head>
@@ -24,7 +24,7 @@
     <button onclick="c1()">計算</button>
     <div id="r1" class="res">等待輸入...</div>
 
-    <h2>2. Sensor Size </h2>
+    <h2>2. Sensor Size</h2>
     <input type="number" id="p2_res" placeholder="解析度 (pixels)">
     <input type="number" id="p2_pix" placeholder="Pixel Size (um)">
     <input type="number" id="p2_sensor" placeholder="Sensor Size (mm)">
@@ -58,7 +58,7 @@
 </div>
 
 <script>
-const f = (val) => val.toFixed(3);
+const f = (val) => isNaN(val) ? "0.000" : val.toFixed(3);
 const MAX = 1000000;
 
 function c1() {
@@ -66,7 +66,8 @@ function c1() {
     let period = parseFloat(document.getElementById('p1_period').value);
     let round = parseFloat(document.getElementById('p1_round').value);
     let res = parseFloat(document.getElementById('p1_res').value);
-    if (!period) period = MAX / rate;
+    if (!period && rate) period = MAX / rate;
+    else if (!rate && period) rate = MAX / period;
     let p_corr = period * round;
     let r_corr = MAX / p_corr;
     let speed = r_corr * res;
@@ -102,7 +103,7 @@ function c4() {
     else if (!ss) ss = (fov * fl) / wd;
     else if (!wd) wd = (fov * fl) / ss;
     else if (!fl) fl = (ss * wd) / fov;
-    document.getElementById('r4').innerText = `FOV: ${f(fov)}mm\nSensor Size: ${f(ss)}mm\n工作距離 WD (mm): ${f(wd)}mm\n焦距 f (mm): ${f(fl)}mm`;
+    document.getElementById('r4').innerText = `FOV: ${f(fov)}mm\nSensor Size: ${f(ss)}mm\nWD: ${f(wd)}mm\n焦距: ${f(fl)}mm`;
 }
 
 function c5() {
@@ -114,7 +115,7 @@ function c5() {
     let res = parseFloat(document.getElementById('p5_res').value);
     if (!fov) fov = ss / m;
     else if (!prec) prec = px / m;
-    else if (!px) px = (ss * 1000) / res;
+    else if (!px) px = (res > 0) ? (ss * 1000) / res : 0;
     document.getElementById('r5').innerText = `FOV: ${f(fov)}mm\n影像精度: ${f(prec)}um/pixel\nPixel Size: ${f(px)}um`;
 }
 </script>
