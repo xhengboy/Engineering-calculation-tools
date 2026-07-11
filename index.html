@@ -78,8 +78,8 @@ function c2() {
     let pix = parseFloat(document.getElementById('p2_pix').value);
     let s = parseFloat(document.getElementById('p2_sensor').value);
     if (!s) s = (res * pix) / 1000;
-    else if (!res) res = (s * 1000) / pix;
-    else if (!pix) pix = (s * 1000) / res;
+    if (!res) res = (s * 1000) / pix;
+    if (!pix) pix = (s * 1000) / res;
     document.getElementById('r2').innerText = `Sensor Size: ${f(s)}mm\n解析度: ${f(res)}\nPixel Size: ${f(pix)}um`;
 }
 
