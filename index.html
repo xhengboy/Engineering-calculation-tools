@@ -102,7 +102,7 @@ function c4() {
     else if (!ss) ss = (fov * fl) / wd;
     else if (!wd) wd = (fov * fl) / ss;
     else if (!fl) fl = (ss * wd) / fov;
-    document.getElementById('r4').innerText = `FOV: ${f(fov)}mm\nSensor Size: ${f(ss)}mm`;
+    document.getElementById('r4').innerText = `FOV: ${f(fov)}mm\nSensor Size: ${f(ss)}mm\n工作距離 WD (mm): ${f(wd)}mm\n焦距 f (mm): ${f(fl)}mm`;
 }
 
 function c5() {
@@ -113,8 +113,8 @@ function c5() {
     let prec = parseFloat(document.getElementById('p5_prec').value);
     let res = parseFloat(document.getElementById('p5_res').value);
     if (!fov) fov = ss / m;
-    if (!prec) prec = px / m;
-    if (!px) px = (ss * 1000) / res;
+    else if (!prec) prec = px / m;
+    else if (!px) px = (ss * 1000) / res;
     document.getElementById('r5').innerText = `FOV: ${f(fov)}mm\n影像精度: ${f(prec)}um/pixel\nPixel Size: ${f(px)}um`;
 }
 </script>
