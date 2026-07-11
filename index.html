@@ -79,6 +79,7 @@ function c2() {
     let s = parseFloat(document.getElementById('p2_sensor').value);
     if (!s) s = (res * pix) / 1000;
     else if (!res) res = (s * 1000) / pix;
+    else if (!pix) pix = (s * 1000) / res;
     document.getElementById('r2').innerText = `Sensor Size: ${f(s)}mm\n解析度: ${f(res)}\nPixel Size: ${f(pix)}um`;
 }
 
@@ -99,6 +100,8 @@ function c4() {
     let fl = parseFloat(document.getElementById('p4_f').value);
     if (!fov) fov = (ss * wd) / fl;
     else if (!ss) ss = (fov * fl) / wd;
+    else if (!wd) wd = (fov * fl) / ss;
+    else if (!fl) fl = (ss * wd) / fov;
     document.getElementById('r4').innerText = `FOV: ${f(fov)}mm\nSensor Size: ${f(ss)}mm`;
 }
 
