@@ -10,6 +10,9 @@
         h2 { font-size: 1rem; color: #333; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 20px; }
         input { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
         button { background: #2c3e50; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; margin-top: 10px; font-weight: bold; }
+        .btn-row { display: flex; gap: 8px; }
+        .btn-row button { margin-top: 10px; }
+        .btn-clear { background: #eee; color: #555; }
         .res { font-size: 0.85rem; color: #c0392b; padding: 10px; background: #fff5f5; border-radius: 8px; margin-top: 10px; white-space: pre-line; }
         .note { font-size: 0.75rem; color: #888; margin-top: 4px; }
     </style>
@@ -22,21 +25,30 @@
     <input type="number" id="p1_period" placeholder="Line Period (us)">
     <input type="number" id="p1_round" placeholder="真圓度 (係數)">
     <input type="number" id="p1_res" placeholder="影像精度 (pixels)">
-    <button onclick="c1()">計算</button>
+    <div class="btn-row">
+        <button onclick="c1()">計算</button>
+        <button class="btn-clear" onclick="clear1()">清除</button>
+    </div>
     <div id="r1" class="res">等待輸入...</div>
 
     <h2>2. Sensor Size (um 換算)</h2>
     <input type="number" id="p2_res" placeholder="解析度 (pixels)">
     <input type="number" id="p2_pix" placeholder="Pixel Size (um)">
     <input type="number" id="p2_sensor" placeholder="Sensor Size (mm)">
-    <button onclick="c2()">計算</button>
+    <div class="btn-row">
+        <button onclick="c2()">計算</button>
+        <button class="btn-clear" onclick="clear2()">清除</button>
+    </div>
     <div id="r2" class="res">等待輸入...</div>
 
     <h2>3. 影像精度</h2>
     <input type="number" id="p3_fov" placeholder="FOV (mm)">
     <input type="number" id="p3_res" placeholder="解析度 (pixels)">
     <input type="number" id="p3_prec" placeholder="影像精度 (mm/pixel)">
-    <button onclick="c3()">計算</button>
+    <div class="btn-row">
+        <button onclick="c3()">計算</button>
+        <button class="btn-clear" onclick="clear3()">清除</button>
+    </div>
     <div id="r3" class="res">等待輸入...</div>
 
     <h2>4. CCTV FOV 計算</h2>
@@ -44,7 +56,10 @@
     <input type="number" id="p4_wd" placeholder="工作距離 WD (mm)">
     <input type="number" id="p4_sensor" placeholder="Sensor Size (mm)">
     <input type="number" id="p4_f" placeholder="焦距 f (mm)">
-    <button onclick="c4()">計算</button>
+    <div class="btn-row">
+        <button onclick="c4()">計算</button>
+        <button class="btn-clear" onclick="clear4()">清除</button>
+    </div>
     <div id="r4" class="res">等待輸入...</div>
     <div class="note">公式：FOV = Sensor × WD / f（只要填 3 項，第 4 項自動反推）</div>
 
@@ -55,7 +70,10 @@
     <input type="number" id="p5_pix" placeholder="Pixel Size (um)">
     <input type="number" id="p5_prec" placeholder="精度 (um/pixel)">
     <input type="number" id="p5_res" placeholder="解析度 (pixels)">
-    <button onclick="c5()">計算</button>
+    <div class="btn-row">
+        <button onclick="c5()">計算</button>
+        <button class="btn-clear" onclick="clear5()">清除</button>
+    </div>
     <div id="r5" class="res">等待輸入...</div>
 </div>
 
@@ -153,6 +171,41 @@ function c4() {
         ` 2. 工作距離 WD: ${f(wd)} mm\n` +
         ` 3. Sensor Size: ${f(ss)} mm\n` +
         ` 4. 焦距 f: ${f(fl)} mm`;
+}
+
+function clear1() {
+    ['p1_rate', 'p1_period', 'p1_round', 'p1_res'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('r1').innerText = '等待輸入...';
+}
+
+function clear2() {
+    ['p2_res', 'p2_pix', 'p2_sensor'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('r2').innerText = '等待輸入...';
+}
+
+function clear3() {
+    ['p3_fov', 'p3_res', 'p3_prec'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('r3').innerText = '等待輸入...';
+}
+
+function clear4() {
+    ['p4_fov', 'p4_wd', 'p4_sensor', 'p4_f'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('r4').innerText = '等待輸入...';
+}
+
+function clear5() {
+    ['p5_sensor', 'p5_mag', 'p5_fov', 'p5_pix', 'p5_prec', 'p5_res'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('r5').innerText = '等待輸入...';
 }
 
 function c5() {
