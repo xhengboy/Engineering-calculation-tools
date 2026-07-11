@@ -11,6 +11,7 @@
         input { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
         button { background: #2c3e50; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; margin-top: 10px; font-weight: bold; }
         .res { font-size: 0.85rem; color: #c0392b; padding: 10px; background: #fff5f5; border-radius: 8px; margin-top: 10px; white-space: pre-line; }
+        .note { font-size: 0.75rem; color: #888; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -20,7 +21,7 @@
     <input type="number" id="p1_rate" placeholder="Line Rate (Hz)">
     <input type="number" id="p1_period" placeholder="Line Period (us)">
     <input type="number" id="p1_round" placeholder="真圓度 (係數)">
-    <input type="number" id="p1_res" placeholder="影像精度">
+    <input type="number" id="p1_res" placeholder="影像精度 (pixels)">
     <button onclick="c1()">計算</button>
     <div id="r1" class="res">等待輸入...</div>
 
@@ -45,6 +46,7 @@
     <input type="number" id="p4_f" placeholder="焦距 f (mm)">
     <button onclick="c4()">計算</button>
     <div id="r4" class="res">等待輸入...</div>
+    <div class="note">公式：FOV = Sensor × WD / f（只要填 3 項，第 4 項自動反推）</div>
 
     <h2>5. Telecentric 計算</h2>
     <input type="number" id="p5_sensor" placeholder="Sensor Size (mm)">
@@ -58,38 +60,75 @@
 </div>
 
 <script>
-const f = (val) => val.toFixed(3);
-const MAX = 1000000;
+const f = (val) => (val === undefined || val === null || isNaN(val)) ? "未提供" : val.toFixed(3);
+const MAX = 1000000; // 1秒 = 1,000,000 微秒，用於 Hz <-> us 互換
 
 function c1() {
     let rate = parseFloat(document.getElementById('p1_rate').value);
     let period = parseFloat(document.getElementById('p1_period').value);
     let round = parseFloat(document.getElementById('p1_round').value);
     let res = parseFloat(document.getElementById('p1_res').value);
-    if (!period) period = MAX / rate;
-    let p_corr = period * round;
-    let r_corr = MAX / p_corr;
-    let speed = r_corr * res;
-    document.getElementById('r1').innerText = `Period(未修正): ${f(period)}us\nPeriod(修正後): ${f(p_corr)}us\nRate(修正後): ${f(r_corr)}Hz\n速度: ${f(speed)}\n加速度: ${f(speed * 10)}`;
+
+    // rate 與 period 互為倒數關係 (us <-> Hz)，任一方可反推另一方
+    if (isNaN(period) && !isNaN(rate)) period = MAX / rate;
+    if (isNaN(rate) && !isNaN(period)) rate = MAX / period;
+
+    let p_corr = (!isNaN(period) && !isNaN(round)) ? period * round : NaN;
+    let r_corr = !isNaN(p_corr) ? MAX / p_corr : NaN;
+    let speed = (!isNaN(r_corr) && !isNaN(res)) ? r_corr * res : NaN;
+
+    // 將反推結果同步寫回輸入框
+    if (!isNaN(rate)) document.getElementById('p1_rate').value = f(rate);
+    if (!isNaN(period)) document.getElementById('p1_period').value = f(period);
+
+    document.getElementById('r1').innerText =
+        `【完整計算結果】\n` +
+        ` 1. Line Rate: ${f(rate)} Hz\n` +
+        ` 2. Line Period(原始): ${f(period)} us\n` +
+        ` 3. 真圓度係數: ${f(round)}\n` +
+        ` 4. 影像精度輸入: ${f(res)} pixels\n` +
+        ` 5. Period(修正後): ${f(p_corr)} us\n` +
+        ` 6. Rate(修正後): ${f(r_corr)} Hz\n` +
+        ` 7. 速度: ${f(speed)}\n` +
+        `※ 註：原始碼中「加速度 = 速度×10」沒有明確公式依據，已先移除，若有正確公式請提供。`;
 }
 
 function c2() {
     let res = parseFloat(document.getElementById('p2_res').value);
     let pix = parseFloat(document.getElementById('p2_pix').value);
     let s = parseFloat(document.getElementById('p2_sensor').value);
-    if (!s) s = (res * pix) / 1000;
-    if (!res) res = (s * 1000) / pix;
-    if (!pix) pix = (s * 1000) / res;
-    document.getElementById('r2').innerText = `Sensor Size: ${f(s)}mm\n解析度: ${f(res)}\nPixel Size: ${f(pix)}um`;
+    if (isNaN(s) && !isNaN(res) && !isNaN(pix)) s = (res * pix) / 1000;
+    if (isNaN(res) && !isNaN(s) && !isNaN(pix)) res = (s * 1000) / pix;
+    if (isNaN(pix) && !isNaN(s) && !isNaN(res)) pix = (s * 1000) / res;
+
+    if (!isNaN(s)) document.getElementById('p2_sensor').value = f(s);
+    if (!isNaN(res)) document.getElementById('p2_res').value = f(res);
+    if (!isNaN(pix)) document.getElementById('p2_pix').value = f(pix);
+
+    document.getElementById('r2').innerText =
+        `【完整計算結果】\n` +
+        ` 1. Sensor Size: ${f(s)} mm\n` +
+        ` 2. 解析度: ${f(res)} pixels\n` +
+        ` 3. Pixel Size: ${f(pix)} um`;
 }
 
 function c3() {
     let fov = parseFloat(document.getElementById('p3_fov').value);
     let res = parseFloat(document.getElementById('p3_res').value);
     let prec = parseFloat(document.getElementById('p3_prec').value);
-    if (!prec) prec = fov / res;
-    else if (!fov) fov = prec * res;
-    document.getElementById('r3').innerText = `影像精度: ${f(prec)}mm/pixel\nFOV: ${f(fov)}mm\n解析度: ${f(res)}`;
+    if (isNaN(prec) && !isNaN(fov) && !isNaN(res)) prec = fov / res;
+    if (isNaN(fov) && !isNaN(prec) && !isNaN(res)) fov = prec * res;
+    if (isNaN(res) && !isNaN(fov) && !isNaN(prec)) res = fov / prec;
+
+    if (!isNaN(fov)) document.getElementById('p3_fov').value = f(fov);
+    if (!isNaN(res)) document.getElementById('p3_res').value = f(res);
+    if (!isNaN(prec)) document.getElementById('p3_prec').value = f(prec);
+
+    document.getElementById('r3').innerText =
+        `【完整計算結果】\n` +
+        ` 1. FOV: ${f(fov)} mm\n` +
+        ` 2. 解析度: ${f(res)} pixels\n` +
+        ` 3. 影像精度: ${f(prec)} mm/pixel`;
 }
 
 function c4() {
@@ -97,9 +136,23 @@ function c4() {
     let wd = parseFloat(document.getElementById('p4_wd').value);
     let ss = parseFloat(document.getElementById('p4_sensor').value);
     let fl = parseFloat(document.getElementById('p4_f').value);
-    if (!fov) fov = (ss * wd) / fl;
-    else if (!ss) ss = (fov * fl) / wd;
-    document.getElementById('r4').innerText = `FOV: ${f(fov)}mm\nSensor Size: ${f(ss)}mm`;
+    // 公式: FOV = Sensor * WD / f  =>  Sensor = FOV*f/WD, WD = Sensor*f/FOV, f = Sensor*WD/FOV
+    if (isNaN(fov) && !isNaN(ss) && !isNaN(wd) && !isNaN(fl)) fov = (ss * wd) / fl;
+    if (isNaN(ss) && !isNaN(fov) && !isNaN(fl) && !isNaN(wd)) ss = (fov * fl) / wd;
+    if (isNaN(wd) && !isNaN(ss) && !isNaN(fl) && !isNaN(fov)) wd = (fov * fl) / ss;
+    if (isNaN(fl) && !isNaN(ss) && !isNaN(wd) && !isNaN(fov)) fl = (ss * wd) / fov;
+
+    if (!isNaN(fov)) document.getElementById('p4_fov').value = f(fov);
+    if (!isNaN(wd)) document.getElementById('p4_wd').value = f(wd);
+    if (!isNaN(ss)) document.getElementById('p4_sensor').value = f(ss);
+    if (!isNaN(fl)) document.getElementById('p4_f').value = f(fl);
+
+    document.getElementById('r4').innerText =
+        `【完整計算結果】\n` +
+        ` 1. FOV: ${f(fov)} mm\n` +
+        ` 2. 工作距離 WD: ${f(wd)} mm\n` +
+        ` 3. Sensor Size: ${f(ss)} mm\n` +
+        ` 4. 焦距 f: ${f(fl)} mm`;
 }
 
 function c5() {
@@ -109,10 +162,39 @@ function c5() {
     let px = parseFloat(document.getElementById('p5_pix').value);
     let prec = parseFloat(document.getElementById('p5_prec').value);
     let res = parseFloat(document.getElementById('p5_res').value);
-    if (!fov) fov = ss / m;
-    if (!prec) prec = px / m;
-    if (!px) px = (ss * 1000) / res;
-    document.getElementById('r5').innerText = `FOV: ${f(fov)}mm\n影像精度: ${f(prec)}um/pixel\nPixel Size: ${f(px)}um`;
+
+    // 交互推導邏輯
+    if (isNaN(m) && !isNaN(ss) && !isNaN(fov)) m = ss / fov;
+    if (isNaN(m) && !isNaN(px) && !isNaN(prec)) m = px / prec;
+
+    if (isNaN(fov) && !isNaN(ss) && !isNaN(m)) fov = ss / m;
+    if (isNaN(prec) && !isNaN(px) && !isNaN(m)) prec = px / m;
+
+    if (isNaN(px) && !isNaN(ss) && !isNaN(res)) px = (ss * 1000) / res;
+    if (isNaN(px) && !isNaN(prec) && !isNaN(m)) px = prec * m;
+
+    if (isNaN(ss) && !isNaN(fov) && !isNaN(m)) ss = fov * m;
+    if (isNaN(ss) && !isNaN(px) && !isNaN(res)) ss = (px * res) / 1000;
+
+    if (isNaN(res) && !isNaN(ss) && !isNaN(px)) res = (ss * 1000) / px;
+
+    // 將計算結果同步更新回畫面的輸入框中
+    if (!isNaN(ss)) document.getElementById('p5_sensor').value = f(ss);
+    if (!isNaN(m)) document.getElementById('p5_mag').value = f(m);
+    if (!isNaN(fov)) document.getElementById('p5_fov').value = f(fov);
+    if (!isNaN(px)) document.getElementById('p5_pix').value = f(px);
+    if (!isNaN(prec)) document.getElementById('p5_prec').value = f(prec);
+    if (!isNaN(res)) document.getElementById('p5_res').value = f(res);
+
+    // 在下方區塊一次列出所有 6 個數值
+    document.getElementById('r5').innerText =
+        `【完整計算結果】\n` +
+        ` 1. 感測器大小 (ss): ${f(ss)} mm\n` +
+        ` 2. 放大倍率 (m): ${f(m)} 倍\n` +
+        ` 3. 視野範圍 (FOV): ${f(fov)} mm\n` +
+        ` 4. 像素大小 (Pixel Size): ${f(px)} um\n` +
+        ` 5. 影像精度 (Precision): ${f(prec)} um/pixel\n` +
+        ` 6. 相機解析度 (Resolution): ${f(res)} px`;
 }
 </script>
 </body>
